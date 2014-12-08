@@ -39,10 +39,17 @@ void ofApp::init(){
 	
 	ofEnableDepthTest();
 
-	faceMesh.setMode(OF_PRIMITIVE_POINTS);
+	faceMesh.setMode(OF_PRIMITIVE_TRIANGLES);
 	for (int i = 0; i < NUM_POINTS; i++) {
 		faceMesh.addVertex(ofVec3f());
 	}
+
+	for (int i = 0; i < sizeof(faceTriangles) / sizeof(faceTriangles[0]); i++) {
+		faceMesh.addIndex(faceTriangles[i][0]);
+		faceMesh.addIndex(faceTriangles[i][1]);
+		faceMesh.addIndex(faceTriangles[i][2]);
+	}
+	faceAnimation.resize(FACE_ANIMATION_SIZE);
 }
 
 //--------------------------------------------------------------
@@ -58,6 +65,11 @@ void ofApp::update(){
 				float y = - m.getArgAsFloat(i * 3 + 3);
 				float z = m.getArgAsFloat(i * 3 + 4);
 				faceMesh.setVertex(i, ofVec3f(x, y, z));
+			}
+		}
+		else if (m.getAddress() == "/face_animation") {
+			for (int i = 0; i < FACE_ANIMATION_SIZE; i++) {
+				faceAnimation.at(i) = m.getArgAsFloat(i + 2);
 			}
 		}
 	}
@@ -90,9 +102,28 @@ void ofApp::draw(){
 			ofScale(1000, 1000, 1000);
 		}
 
-		ofSetColor(255);
+		ofFloatColor c;
+		c.setHsb(ofMap(faceAnimation.at(3), -1, 1, 0, 1), 1.0, 1.0);
+		ofSetColor(255, 54);
 		glPointSize(3);
-		faceMesh.draw();
+		faceMesh.drawWireframe();
+
+		/*
+		int trIndex = floor(ofMap(ofNoise(ofGetElapsedTimef()), 0.0, 1.0, 0.0, (faceMesh.getNumIndices() / 3)));
+		ofMesh m = faceMesh;
+		m.clearIndices();
+		m.addIndex(faceMesh.getIndex(trIndex * 3));
+		m.addIndex(faceMesh.getIndex(trIndex * 3+1));
+		m.addIndex(faceMesh.getIndex(trIndex * 3+2));
+		m.draw();
+		*/
+
+		ofFill();
+		ofSetColor(ofColor::blue);
+		ofDrawSphere(faceMesh.getVertex(5), ofMap(faceAnimation.at(3), 0, 1, 0.0, 0.02, true));
+		ofSetColor(ofColor::red);
+		ofDrawSphere(faceMesh.getVertex(90), ofMap(faceAnimation.at(3), 0, 1, 0.0, 0.02, true));
+		ofDrawSphere(faceMesh.getVertex(91), ofMap(faceAnimation.at(3), 0, 1, 0.0, 0.02, true));
 
 		if (cameraMode == EASYCAM_MODE) {
 			cam.end();
