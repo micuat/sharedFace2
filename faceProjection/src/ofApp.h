@@ -11,7 +11,7 @@ Naoto Hieda <micuat@gmail.com> 2014
 #include "ofxCv.h"
 #include "ofxOsc.h"
 
-#define PORT 7110
+#define PORT 57121
 #define NUM_POINTS 121
 #define RES_MULT 2
 #define FACE_ANIMATION_SIZE 6
@@ -27,6 +27,7 @@ public:
 	void mouseDragged(int x, int y, int button);
 	void mouseReleased(int x, int y, int button);
 	void dragEvent(ofDragInfo);
+	void audioIn(float *input, int bufferSize, int nChannels);
 
 	vector<string> rootDir;
 
@@ -44,6 +45,9 @@ private:
 	CameraMode cameraMode;
 
 	ofxOscReceiver receiver;
+
+	ofSoundStream soundStream;
+	float smoothedVol;
 
 	bool pathLoaded;
 };

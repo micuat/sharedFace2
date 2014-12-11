@@ -2,6 +2,10 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+	soundStream.listDevices();
+	soundStream.setDeviceID(5);
+	soundStream.setup(this, 0, 1, 44100, 256, 4);
+	
 	if (rootDir.size() > 0) {
 		init();
 		pathLoaded = true;
@@ -19,7 +23,6 @@ void ofApp::init(){
 	receiver.setup(PORT);
 
 	cameraMode = EASYCAM_MODE;
-
 
 	// load calibration parameters
 	cv::FileStorage fs(ofToDataPath(rootDir[0] + "/config.yml"), cv::FileStorage::READ);
@@ -105,6 +108,7 @@ void ofApp::draw(){
 		ofFloatColor c;
 		c.setHsb(ofMap(faceAnimation.at(3), -1, 1, 0, 1), 1.0, 1.0);
 		ofSetColor(255, 54);
+		ofSetLineWidth(1);
 		glPointSize(3);
 		faceMesh.drawWireframe();
 
@@ -115,19 +119,20 @@ void ofApp::draw(){
 		m.addIndex(faceMesh.getIndex(trIndex * 3));
 		m.addIndex(faceMesh.getIndex(trIndex * 3+1));
 		m.addIndex(faceMesh.getIndex(trIndex * 3+2));
-		m.draw();
-		*/
+ 		*/
 
 		ofFill();
 		ofSetColor(ofColor::blue);
-		ofDrawSphere(faceMesh.getVertex(5), ofMap(faceAnimation.at(3), 0, 1, 0.0, 0.02, true));
+		ofDrawSphere(faceMesh.getVertex(5), smoothedVol * 3 / 100);
 		ofSetColor(ofColor::red);
-		ofDrawSphere(faceMesh.getVertex(90), ofMap(faceAnimation.at(3), 0, 1, 0.0, 0.02, true));
-		ofDrawSphere(faceMesh.getVertex(91), ofMap(faceAnimation.at(3), 0, 1, 0.0, 0.02, true));
+		ofDrawSphere(faceMesh.getVertex(90), smoothedVol * 3 / 100);
+		ofDrawSphere(faceMesh.getVertex(91), smoothedVol * 3 / 100);
 
 		if (cameraMode == EASYCAM_MODE) {
 			cam.end();
 		}
+
+		ofSetWindowTitle(ofToString(smoothedVol));
 	}
 }
 
@@ -172,4 +177,15 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 		init();
 		pathLoaded = true;
 	}
+}
+
+//--------------------------------------------------------------
+void ofApp::audioIn(float *input, int bufferSize, int nChannels){
+	float curVol = 0.0;
+	for (int i = 0; i < bufferSize; i++) {
+		curVol += input[i] * input[i] * 0.25;
+	}
+	curVol /= (float)bufferSize;
+	curVol = sqrt(curVol);
+	smoothedVol = curVol;
 }
