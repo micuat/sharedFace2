@@ -12,6 +12,10 @@ void ofApp::setup(){
 	}
 	else {
 		pathLoaded = false;
+
+		rootDir.push_back("./");
+		init();
+		pathLoaded = true;
 	}
 
 }
@@ -45,6 +49,7 @@ void ofApp::init(){
 	faceMesh.setMode(OF_PRIMITIVE_TRIANGLES);
 	for (int i = 0; i < NUM_POINTS; i++) {
 		faceMesh.addVertex(ofVec3f());
+		faceMesh.addTexCoord(ofVec2f(faceUv[i][0], faceUv[i][1]));
 	}
 
 	for (int i = 0; i < sizeof(faceTriangles) / sizeof(faceTriangles[0]); i++) {
@@ -54,6 +59,106 @@ void ofApp::init(){
 	}
 	faceAnimation.resize(FACE_ANIMATION_SIZE);
 	facePose.resize(FACE_POSE_SIZE);
+
+	faceFbo.allocate(1024, 768);
+
+	//toStoreMesh = true;
+	toStoreMesh = false;
+
+#define STRINGIFY(A) #A
+	const char *src1v = STRINGIFY
+	(
+	uniform float dist;
+	uniform vec2 ppoint;
+	uniform float elapsedTime;
+	void main(){
+
+		gl_TexCoord[0] = gl_MultiTexCoord0;
+
+		// projection as usual
+		vec4 pos = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;
+		gl_Position = pos;
+
+		// xy with principal point origin
+		vec2 shiftPos = pos.xy - ppoint;
+
+		// lens distortion
+		gl_Position.xy = shiftPos * (1.0 / (1.0 - dist * length(shiftPos))) + ppoint;
+
+		vec4 col = gl_Color;
+		gl_FrontColor = col;
+		gl_TexCoord[0] = gl_MultiTexCoord0;
+	}
+	);
+
+	const char *src1f = STRINGIFY
+	(
+	uniform float elapsedTime;
+	uniform sampler2DRect texture1;
+	//generate a random value from four points
+	vec4 rand(vec2 A, vec2 B, vec2 C, vec2 D){
+
+		vec2 s = vec2(12.9898, 78.233);
+		vec4 tmp = vec4(dot(A, s), dot(B, s), dot(C, s), dot(D, s));
+
+		return fract(sin(tmp) * 43758.5453)* 2.0 - 1.0;
+	}
+
+	//this is similar to a perlin noise function
+	float noise(vec2 coord, float d){
+
+		vec2 C[4];
+
+		float d1 = 1.0 / d;
+
+		C[0] = floor(coord*d)*d1;
+
+		C[1] = C[0] + vec2(d1, 0.0);
+
+		C[2] = C[0] + vec2(d1, d1);
+
+		C[3] = C[0] + vec2(0.0, d1);
+
+
+		vec2 p = fract(coord*d);
+
+		vec2 q = 1.0 - p;
+
+		vec4 w = vec4(q.x*q.y, p.x*q.y, p.x*p.y, q.x*p.y);
+
+		return dot(vec4(rand(C[0], C[1], C[2], C[3])), w);
+	}
+
+	vec3 rgb2hsv(vec3 c) {
+		vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+		vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+		vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+		float d = q.x - min(q.w, q.y);
+		float e = 1.0e-10;
+		return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+	}
+
+	vec3 hsv2rgb(vec3 c) {
+		vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+		vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+		return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+	}
+	void main() {
+		vec2 pos = gl_TexCoord[0].st;
+
+		vec4 col = texture2DRect(texture1, gl_TexCoord[0].st);
+		gl_FragColor = col;
+	}
+	);
+
+	shader.setupShaderFromSource(GL_VERTEX_SHADER, src1v);
+	shader.setupShaderFromSource(GL_FRAGMENT_SHADER, src1f);
+	shader.linkProgram();
+
+	shader.begin();
+	shader.setUniform1f("dist", 0);
+	shader.end();
 }
 
 //--------------------------------------------------------------
@@ -64,11 +169,17 @@ void ofApp::update(){
 		receiver.getNextMessage(&m);
 
 		if (m.getAddress() == "/face_mesh"){
+			
 			for (int i = 0; i < NUM_POINTS; i++) {
 				float x = - m.getArgAsFloat(i * 3 + 2);
 				float y = - m.getArgAsFloat(i * 3 + 3);
 				float z = m.getArgAsFloat(i * 3 + 4);
 				faceMesh.setVertex(i, ofVec3f(x, y, z));
+			}
+
+			if (toStoreMesh) {
+				toStoreMesh = false;
+				faceMesh.save("faceMesh.ply");
 			}
 		}
 		else if (m.getAddress() == "/face_animation") {
@@ -87,6 +198,19 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 	if (pathLoaded) {
+		faceFbo.begin();
+		ofBackground(0);
+		for (int i = 0; i < 16; i++) {
+			ofFloatColor c;
+			float hue = i / 16.0f + ofGetElapsedTimef();
+			hue -= (long)hue;
+			c.setHsb(hue, 1.0, 1.0);
+			ofSetColor(c);
+			ofRect(0, (i)*768.0 / 16, 1024, 768.0 / 16);
+		}
+		faceFbo.end();
+
+		ofEnableDepthTest();
 
 		float curTime = ofGetElapsedTimef();
 
@@ -111,31 +235,27 @@ void ofApp::draw(){
 			ofScale(1000, 1000, 1000);
 		}
 
-		ofSetColor(255, 54);
+		ofSetColor(255, 255);
 		ofSetLineWidth(1);
 		glPointSize(3);
-		faceMesh.drawWireframe();
 
-		/*
-		int trIndex = floor(ofMap(ofNoise(ofGetElapsedTimef()), 0.0, 1.0, 0.0, (faceMesh.getNumIndices() / 3)));
-		ofMesh m = faceMesh;
-		m.clearIndices();
-		m.addIndex(faceMesh.getIndex(trIndex * 3));
-		m.addIndex(faceMesh.getIndex(trIndex * 3+1));
-		m.addIndex(faceMesh.getIndex(trIndex * 3+2));
- 		*/
 
-		ofSetColor(ofColor::blue);
-		ofDrawSphere(faceMesh.getVertex(5), smoothedVol * 3 / 100);
+		shader.begin();
+		shader.setUniform2f("ppoint", proIntrinsic.at<double>(0, 2) / ofGetWidth(), proIntrinsic.at<double>(1, 2) / ofGetHeight());
+		shader.setUniform1f("elapsedTime", ofGetElapsedTimef());
+		shader.setUniformTexture("texture1", faceFbo.getTextureReference(), 0);
 
-		ofFloatColor c;
-		c.setHsb(ofMap(facePose.at(5), -90, 90, 0, 1), 1.0, 1.0);
-		ofSetColor(c);
-		ofDrawSphere(faceMesh.getVertex(90), smoothedVol * 3 / 100);
-		ofDrawSphere(faceMesh.getVertex(91), smoothedVol * 3 / 100);
+		faceMesh.draw();
+
+		shader.end();
 
 		if (cameraMode == EASYCAM_MODE) {
 			cam.end();
+		}
+
+		if (cameraMode == CAM_MODE) {
+			ofDisableDepthTest();
+			faceFbo.draw(0, 0);
 		}
 
 		ofSetWindowTitle(ofToString(smoothedVol));
