@@ -53,6 +53,7 @@ void ofApp::init(){
 		faceMesh.addIndex(faceTriangles[i][2]);
 	}
 	faceAnimation.resize(FACE_ANIMATION_SIZE);
+	facePose.resize(FACE_POSE_SIZE);
 }
 
 //--------------------------------------------------------------
@@ -73,6 +74,11 @@ void ofApp::update(){
 		else if (m.getAddress() == "/face_animation") {
 			for (int i = 0; i < FACE_ANIMATION_SIZE; i++) {
 				faceAnimation.at(i) = m.getArgAsFloat(i + 2);
+			}
+		}
+		else if (m.getAddress() == "/face") {
+			for (int i = 0; i < FACE_POSE_SIZE; i++) {
+				facePose.at(i) = m.getArgAsFloat(i + 2);
 			}
 		}
 	}
@@ -105,8 +111,6 @@ void ofApp::draw(){
 			ofScale(1000, 1000, 1000);
 		}
 
-		ofFloatColor c;
-		c.setHsb(ofMap(faceAnimation.at(3), -1, 1, 0, 1), 1.0, 1.0);
 		ofSetColor(255, 54);
 		ofSetLineWidth(1);
 		glPointSize(3);
@@ -121,10 +125,12 @@ void ofApp::draw(){
 		m.addIndex(faceMesh.getIndex(trIndex * 3+2));
  		*/
 
-		ofFill();
 		ofSetColor(ofColor::blue);
 		ofDrawSphere(faceMesh.getVertex(5), smoothedVol * 3 / 100);
-		ofSetColor(ofColor::red);
+
+		ofFloatColor c;
+		c.setHsb(ofMap(facePose.at(5), -90, 90, 0, 1), 1.0, 1.0);
+		ofSetColor(c);
 		ofDrawSphere(faceMesh.getVertex(90), smoothedVol * 3 / 100);
 		ofDrawSphere(faceMesh.getVertex(91), smoothedVol * 3 / 100);
 

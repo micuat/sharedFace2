@@ -15,6 +15,7 @@ Naoto Hieda <micuat@gmail.com> 2014
 #define NUM_POINTS 121
 #define RES_MULT 2
 #define FACE_ANIMATION_SIZE 6
+#define FACE_POSE_SIZE 6
 
 class ofApp : public ofBaseApp {
 public:
@@ -35,7 +36,7 @@ private:
 	int projector_width, projector_height;
 	float projector_horizontal_center;
 	ofMesh faceMesh;
-	vector<float> faceAnimation;
+	vector<float> faceAnimation, facePose;
 	ofEasyCam cam;
 	cv::Mat proIntrinsic, proExtrinsic;
 	ofxCv::Intrinsics proCalibration;
