@@ -218,6 +218,35 @@ void ofApp::update(){
 }
 
 //--------------------------------------------------------------
+void ofApp::drawPolygon(float xPct, float yPct){
+	// from oF polygonExample
+	int nTips = 5 + xPct * 60;
+	int nStarPts = nTips * 2;
+	float angleChangePerPt = TWO_PI / (float)nStarPts;
+	float innerRadius = 0 + yPct * 60;
+	float outerRadius = 60;
+	float angle = 0;
+
+	ofBeginShape();
+	for (int i = 0; i < nStarPts; i++){
+		if (i % 2 == 0) {
+			// inside point:
+			float x = innerRadius * cos(angle);
+			float y = innerRadius * sin(angle);
+			ofVertex(x, y);
+		}
+		else {
+			// outside point
+			float x = outerRadius * cos(angle);
+			float y = outerRadius * sin(angle);
+			ofVertex(x, y);
+		}
+		angle += angleChangePerPt;
+	}
+	ofEndShape();
+}
+
+//--------------------------------------------------------------
 void ofApp::draw(){
 	if (pathLoaded) {
 		faceFbo.begin();
@@ -235,14 +264,19 @@ void ofApp::draw(){
 		}
 		for (int i = 0; i < stampPoints.size(); i++) {
 			ofFill();
+			ofPushMatrix();
 			if (i == 0)
 				ofSetColor(255, 0, 0);
 			else if (i == 1)
 				ofSetColor(0, 255, 0);
 			else
 				ofSetColor(0, 0, 255);
-			ofCircle(stampPoints.at(i), 75/2);
+			
+			ofTranslate(stampPoints.at(i));
+			drawPolygon(ofMap(faceAnimation.at(3), 0, 1, 0, 0.3, true) , 0.6f);
+			ofPopMatrix();
 		}
+		
 		faceFbo.end();
 
 		ofEnableDepthTest();

@@ -29,6 +29,7 @@ public:
 	void mouseReleased(int x, int y, int button);
 	void dragEvent(ofDragInfo);
 	void audioIn(float *input, int bufferSize, int nChannels);
+	void drawPolygon(float x, float y);
 
 	vector<string> rootDir;
 
