@@ -168,7 +168,7 @@ void ofApp::update(){
 		ofxOscMessage m;
 		receiver.getNextMessage(&m);
 
-		if (m.getAddress() == "/face_mesh"){
+		if (m.getAddress() == "/osceleton/face_mesh"){
 			
 			for (int i = 0; i < NUM_POINTS; i++) {
 				float x = - m.getArgAsFloat(i * 3 + 2);
@@ -182,12 +182,12 @@ void ofApp::update(){
 				faceMesh.save("faceMesh.ply");
 			}
 		}
-		else if (m.getAddress() == "/face_animation") {
+		else if (m.getAddress() == "/osceleton/face_animation") {
 			for (int i = 0; i < FACE_ANIMATION_SIZE; i++) {
 				faceAnimation.at(i) = m.getArgAsFloat(i + 2);
 			}
 		}
-		else if (m.getAddress() == "/face") {
+		else if (m.getAddress() == "/osceleton/face") {
 			for (int i = 0; i < FACE_POSE_SIZE; i++) {
 				facePose.at(i) = m.getArgAsFloat(i + 2);
 			}
