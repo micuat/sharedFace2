@@ -53,6 +53,9 @@ private:
 	ofFbo faceFbo;
 	ofShader shader;
 
+	vector<ofMesh> lines;
+	vector<ofPoint> stampPoints;
+
 	bool pathLoaded;
 	bool toStoreMesh;
 };

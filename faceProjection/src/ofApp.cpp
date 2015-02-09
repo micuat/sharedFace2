@@ -62,6 +62,8 @@ void ofApp::init(){
 
 	faceFbo.allocate(1024, 768);
 
+	stampPoints.resize(3);
+
 	//toStoreMesh = true;
 	toStoreMesh = false;
 
@@ -192,6 +194,26 @@ void ofApp::update(){
 				facePose.at(i) = m.getArgAsFloat(i + 2);
 			}
 		}
+		else if (m.getAddress() == "/sharedFace/canvas/pen/coord") {
+			int id = m.getArgAsInt32(0);
+			float x = m.getArgAsFloat(1);
+			float y = m.getArgAsFloat(2);
+			float r = m.getArgAsFloat(3);
+			float g = m.getArgAsFloat(4);
+			float b = m.getArgAsFloat(5);
+			while (id >(int)lines.size() - 1) {
+				lines.push_back(ofMesh());
+				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
+			}
+			lines.at(id).addVertex(ofVec3f(x, y, 0));
+			lines.at(id).addColor(ofFloatColor(r, g, b));
+		}
+		else if (m.getAddress() == "/sharedFace/canvas/stamp/coord") {
+			int id = m.getArgAsInt32(0);
+			float x = m.getArgAsFloat(1);
+			float y = m.getArgAsFloat(2);
+			stampPoints.at(id) = ofPoint(x, y);
+		}
 	}
 }
 
@@ -199,14 +221,27 @@ void ofApp::update(){
 void ofApp::draw(){
 	if (pathLoaded) {
 		faceFbo.begin();
-		ofBackground(0);
-		for (int i = 0; i < 16; i++) {
-			ofFloatColor c;
-			float hue = i / 16.0f + ofGetElapsedTimef();
-			hue -= (long)hue;
-			c.setHsb(hue, 1.0, 1.0);
-			ofSetColor(c);
-			ofRect(0, (i)*768.0 / 16, 1024, 768.0 / 16);
+		ofDisableDepthTest();
+		ofBackground(255);
+		ofSetColor(0);
+
+		// flipped?
+		ofTranslate(ofGetWidth() / 2.0f, 0, 0);
+		ofScale(-1, 1, 1);
+		ofTranslate(-ofGetWidth() / 2.0f, 0, 0);
+
+		for (int i = 0; i < lines.size(); i++) {
+			lines.at(i).draw();
+		}
+		for (int i = 0; i < stampPoints.size(); i++) {
+			ofFill();
+			if (i == 0)
+				ofSetColor(255, 0, 0);
+			else if (i == 1)
+				ofSetColor(0, 255, 0);
+			else
+				ofSetColor(0, 0, 255);
+			ofCircle(stampPoints.at(i), 75/2);
 		}
 		faceFbo.end();
 
