@@ -57,8 +57,8 @@ void ofApp::init(){
 		faceMesh.addIndex(faceTriangles[i][1]);
 		faceMesh.addIndex(faceTriangles[i][2]);
 	}
-	faceAnimation.resize(FACE_ANIMATION_SIZE);
-	facePose.resize(FACE_POSE_SIZE);
+	faceAnimation.resize(FACE_ANIMATION_SIZE, 0);
+	facePose.resize(FACE_POSE_SIZE, 0);
 
 	faceFbo.allocate(1024, 768);
 
@@ -251,8 +251,8 @@ void ofApp::draw(){
 	if (pathLoaded) {
 		faceFbo.begin();
 		ofDisableDepthTest();
-		ofBackground(255);
-		ofSetColor(0);
+		ofBackground(0);
+		ofSetColor(255);
 
 		// flipped?
 		ofTranslate(ofGetWidth() / 2.0f, 0, 0);
@@ -262,6 +262,7 @@ void ofApp::draw(){
 		for (int i = 0; i < lines.size(); i++) {
 			lines.at(i).draw();
 		}
+		ofEnableBlendMode(OF_BLENDMODE_SCREEN);
 		for (int i = 0; i < stampPoints.size(); i++) {
 			ofFill();
 			ofPushMatrix();
@@ -276,6 +277,7 @@ void ofApp::draw(){
 			drawPolygon(ofMap(faceAnimation.at(3), 0, 1, 0, 0.3, true) , 0.6f);
 			ofPopMatrix();
 		}
+		ofDisableBlendMode();
 		
 		faceFbo.end();
 
@@ -301,6 +303,10 @@ void ofApp::draw(){
 				0, 0, 0, 1);
 			extrinsics = extrinsics.t();
 			glMultMatrixd((GLdouble*)extrinsics.ptr(0, 0));
+
+			ofViewport(moveKey.x, moveKey.y);
+
+
 			ofScale(1000, 1000, 1000);
 		}
 
@@ -346,6 +352,20 @@ void ofApp::keyPressed(int key){
 	if (key == 'f') {
 		ofToggleFullscreen();
 	}
+
+	if (key == OF_KEY_UP) {
+		moveKey.y -= 1;
+	}
+	if (key == OF_KEY_DOWN) {
+		moveKey.y += 1;
+	}
+	if (key == OF_KEY_LEFT) {
+		moveKey.x -= 1;
+	}
+	if (key == OF_KEY_RIGHT) {
+		moveKey.x += 1;
+	}
+	ofLogWarning() << moveKey;
 }
 
 //--------------------------------------------------------------

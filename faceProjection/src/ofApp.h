@@ -57,6 +57,8 @@ private:
 	vector<ofMesh> lines;
 	vector<ofPoint> stampPoints;
 
+	ofVec2f moveKey;
+
 	bool pathLoaded;
 	bool toStoreMesh;
 };
