@@ -10,6 +10,8 @@ Naoto Hieda <micuat@gmail.com> 2014
 
 #include "ofxCv.h"
 #include "ofxOsc.h"
+#include "ofxFluid.h"
+#include "ofxBox2d.h"
 
 #define PORT 57121
 #define NUM_POINTS 121
@@ -61,6 +63,10 @@ private:
 
 	bool pathLoaded;
 	bool toStoreMesh;
+
+	ofxBox2d box2d;
+	vector <ofPtr<ofxBox2dCircle> > circles;
+	ofPtr <ofxBox2dEdge> edge;
 };
 
 static const int faceTriangles[206][3] = { { 11, 0, 1 },

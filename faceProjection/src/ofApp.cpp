@@ -161,10 +161,25 @@ void ofApp::init(){
 	shader.begin();
 	shader.setUniform1f("dist", 0);
 	shader.end();
+
+	box2d.init();
+	//box2d.createGround();
+	box2d.setGravity(0, 0.2);
+	box2d.setFPS(30.0);
+
+	edge = ofPtr<ofxBox2dEdge>(new ofxBox2dEdge);
+	edge.get()->addVertex(ofVec2f(394.097, 537.886));
+	edge.get()->addVertex(ofVec2f(468.551, 588.985));
+	edge.get()->addVertex(ofVec2f(510.702, 598.089));
+	edge.get()->addVertex(ofVec2f(553.019, 589.462));
+	edge.get()->addVertex(ofVec2f(628.369, 539.216));
+	edge.get()->create(box2d.getWorld());
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	box2d.update();
+
 	while (receiver.hasWaitingMessages()){
 		// get the next message
 		ofxOscMessage m;
@@ -258,6 +273,12 @@ void ofApp::draw(){
 		ofTranslate(ofGetWidth() / 2.0f, 0, 0);
 		ofScale(-1, 1, 1);
 		ofTranslate(-ofGetWidth() / 2.0f, 0, 0);
+		
+		for (int i = 0; i<circles.size(); i++) {
+			ofFill();
+			ofSetHexColor(0xf6c738);
+			circles[i].get()->draw();
+		}
 
 		for (int i = 0; i < lines.size(); i++) {
 			lines.at(i).draw();
@@ -366,6 +387,14 @@ void ofApp::keyPressed(int key){
 		moveKey.x += 1;
 	}
 	ofLogWarning() << moveKey;
+
+	if (key == 'c') {
+		float r = ofRandom(4, 20);
+		circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
+		circles.back().get()->setPhysics(0.3, 0.5, 0.1);
+		circles.back().get()->setup(box2d.getWorld(), mouseX, mouseY, r);
+
+	}
 }
 
 //--------------------------------------------------------------
