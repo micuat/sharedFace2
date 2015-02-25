@@ -183,21 +183,23 @@ void ofApp::init(){
 	fluid.allocate(ofGetWidth(), ofGetHeight(), 0.25);
 	fluid.dissipation = 0.99;
 	fluid.velocityDissipation = 0.99;
-	fluid.setGravity(ofVec2f(0.0, 0.0098));
+	fluid.setGravity(ofVec2f(0.0, 0.005));
 	fluid.begin();
 	ofSetColor(255);
-	ofCircle(438, 350, 50);
-	ofCircle(585, 350, 50);
+//	ofCircle(438, 350, 20);
+//	ofCircle(585, 350, 20);
+	ofTriangle(511, 371, 484, 451, 539, 451);
 	fluid.end();
 	fluid.setUseObstacles(true);
-	fluid.addConstantForce(ofPoint(ofGetWidth() / 2, 0), ofPoint(), ofFloatColor(0.05, 0, 0), 5.f);
+	fluid.addConstantForce(ofPoint(ofGetWidth() / 2, 0), ofPoint(), ofFloatColor(0.01, 0, 0), 10.f);
+	fluid.addConstantForce(ofPoint(438, 350), ofPoint(), ofFloatColor(0, 0.05, 0.1), 10.f);
+	fluid.addConstantForce(ofPoint(585, 350), ofPoint(), ofFloatColor(0, 0.05, 0.1), 10.f);
 
 	renderMode = BASIC_MODE;
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	fluid.update();
 	if (ofGetFrameNum() % 2 && renderMode == BOX2D_MODE) {
 		float r = ofRandom(4, 10);
 		circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
@@ -238,7 +240,7 @@ void ofApp::update(){
 			faceVel.y = facePose.at(1) - facePoseOld.at(1);
 			facePoseOld = facePose;
 			box2d.setGravity(ofVec2f(0, 0.5f).getRotated(-facePose.at(5)) - faceVel * 0.02f);
-			fluid.setGravity(ofVec2f(0, 0.0098).getRotated(-facePose.at(5)) - faceVel * 0.0005f);
+			fluid.setGravity(ofVec2f(0, 0.005).getRotated(-facePose.at(5)) - faceVel * 0.0002f);
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/pen/coord") {
 			int id = m.getArgAsInt32(0);
@@ -273,6 +275,7 @@ void ofApp::update(){
 		box2d.update();
 	}
 	else if (renderMode == FLUID_MODE) {
+		fluid.update();
 	}
 }
 
@@ -366,6 +369,8 @@ void ofApp::draw(){
 
 		ofBackground(0);
 
+		ofPushMatrix();
+
 		if (cameraMode == EASYCAM_MODE) {
 			cam.begin();
 			ofScale(1000, -1000, 1000);
@@ -397,7 +402,7 @@ void ofApp::draw(){
 		shader.begin();
 		shader.setUniform2f("ppoint", proIntrinsic.at<double>(0, 2) / ofGetWidth(), proIntrinsic.at<double>(1, 2) / ofGetHeight());
 		shader.setUniform1f("elapsedTime", ofGetElapsedTimef());
-		shader.setUniformTexture("texture1", faceFbo.getTextureReference(), 1);
+		shader.setUniformTexture("texture1", faceFbo.getTextureReference(), 0);
 
 		faceMesh.draw();
 
@@ -407,11 +412,10 @@ void ofApp::draw(){
 			cam.end();
 		}
 
-		if (cameraMode == CAM_MODE) {
+//		if (cameraMode == CAM_MODE) {
 			ofDisableDepthTest();
 			faceFbo.draw(0, 0);
-		}
-//		if (renderMode == FLUID_MODE && ofGetFrameNum() % 2){
+//		}
 
 		ofSetWindowTitle(ofToString(smoothedVol));
 	}
