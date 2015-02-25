@@ -70,6 +70,8 @@ private:
 	ofxBox2d box2d;
 	vector <ofPtr<ofxBox2dCircle> > circles;
 	ofPtr <ofxBox2dEdge> edge;
+
+	ofxFluid fluid;
 };
 
 static const int faceTriangles[206][3] = { { 11, 0, 1 },

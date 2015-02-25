@@ -179,11 +179,26 @@ void ofApp::init(){
 	edge.get()->addVertex(ofVec2f(553.019, 589.462));
 	edge.get()->addVertex(ofVec2f(628.369, 539.216));
 	edge.get()->create(box2d.getWorld());
+	
+	fluid.allocate(ofGetWidth(), ofGetHeight(), 0.25);
+	fluid.dissipation = 0.99;
+	fluid.velocityDissipation = 0.99;
+	fluid.setGravity(ofVec2f(0.0, 0.0098));
+	fluid.begin();
+	ofSetColor(255);
+	ofCircle(438, 350, 50);
+	ofCircle(585, 350, 50);
+	fluid.end();
+	fluid.setUseObstacles(true);
+	fluid.addConstantForce(ofPoint(ofGetWidth() / 2, 0), ofPoint(), ofFloatColor(0.05, 0, 0), 5.f);
+
+	renderMode = BASIC_MODE;
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	if (ofGetFrameNum() % 2) {
+	fluid.update();
+	if (ofGetFrameNum() % 2 && renderMode == BOX2D_MODE) {
 		float r = ofRandom(4, 10);
 		circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
 		circles.back().get()->setPhysics(0.3, 0.7, 0.1);
@@ -223,6 +238,7 @@ void ofApp::update(){
 			faceVel.y = facePose.at(1) - facePoseOld.at(1);
 			facePoseOld = facePose;
 			box2d.setGravity(ofVec2f(0, 0.5f).getRotated(-facePose.at(5)) - faceVel * 0.02f);
+			fluid.setGravity(ofVec2f(0, 0.0098).getRotated(-facePose.at(5)) - faceVel * 0.0005f);
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/pen/coord") {
 			int id = m.getArgAsInt32(0);
@@ -238,6 +254,8 @@ void ofApp::update(){
 				circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
 				circles.back().get()->setPhysics(0.5, 0.7, 0.1);
 				circles.back().get()->setup(box2d.getWorld(), x, y, rad);
+
+				fluid.addTemporalForce(ofVec2f(x, y), ofVec2f(), ofFloatColor(r, g, b), 3.0f);
 			}
 			lines.at(id).addVertex(ofVec3f(x, y, 0));
 			lines.at(id).addColor(ofFloatColor(r, g, b));
@@ -250,8 +268,12 @@ void ofApp::update(){
 		}
 	}
 
-	ofRemove(circles, shouldRemove);
-	box2d.update();
+	if (renderMode == BOX2D_MODE) {
+		ofRemove(circles, shouldRemove);
+		box2d.update();
+	}
+	else if (renderMode == FLUID_MODE) {
+	}
 }
 
 //--------------------------------------------------------------
@@ -326,6 +348,9 @@ void ofApp::draw(){
 				ofCircle(circles[i].get()->getPosition(), circles[i].get()->getRadius());
 			}
 		}
+		else if (renderMode == FLUID_MODE) {
+			fluid.draw();
+		}
 		
 		// eye mask
 		ofSetColor(0);
@@ -372,7 +397,7 @@ void ofApp::draw(){
 		shader.begin();
 		shader.setUniform2f("ppoint", proIntrinsic.at<double>(0, 2) / ofGetWidth(), proIntrinsic.at<double>(1, 2) / ofGetHeight());
 		shader.setUniform1f("elapsedTime", ofGetElapsedTimef());
-		shader.setUniformTexture("texture1", faceFbo.getTextureReference(), 0);
+		shader.setUniformTexture("texture1", faceFbo.getTextureReference(), 1);
 
 		faceMesh.draw();
 
@@ -386,6 +411,7 @@ void ofApp::draw(){
 			ofDisableDepthTest();
 			faceFbo.draw(0, 0);
 		}
+//		if (renderMode == FLUID_MODE && ofGetFrameNum() % 2){
 
 		ofSetWindowTitle(ofToString(smoothedVol));
 	}
@@ -400,8 +426,12 @@ void ofApp::keyPressed(int key){
 		case '2': cameraMode = PRO_MODE; break;
 		case '3': cameraMode = CAM_MODE; break;
 		case '4': renderMode = BASIC_MODE; break;
-		case '5': renderMode = BOX2D_MODE; break;
-		case '6': renderMode = FLUID_MODE; break;
+		case '5':
+			renderMode = BOX2D_MODE;
+			break;
+		case '6':
+			renderMode = FLUID_MODE;
+			break;
 		}
 
 	}
