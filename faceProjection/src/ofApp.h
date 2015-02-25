@@ -39,7 +39,7 @@ private:
 	int projector_width, projector_height;
 	float projector_horizontal_center;
 	ofMesh faceMesh;
-	vector<float> faceAnimation, facePose;
+	vector<float> faceAnimation, facePose, facePoseOld;
 	ofEasyCam cam;
 	cv::Mat proIntrinsic, proExtrinsic;
 	ofxCv::Intrinsics proCalibration;

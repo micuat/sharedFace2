@@ -1,5 +1,9 @@
 #include "ofApp.h"
 
+static bool shouldRemove(ofPtr<ofxBox2dBaseShape>shape) {
+	return !ofRectangle(0, -400, ofGetWidth(), ofGetHeight() + 400).inside(shape.get()->getPosition());
+}
+
 //--------------------------------------------------------------
 void ofApp::setup(){
 	soundStream.listDevices();
@@ -59,6 +63,7 @@ void ofApp::init(){
 	}
 	faceAnimation.resize(FACE_ANIMATION_SIZE, 0);
 	facePose.resize(FACE_POSE_SIZE, 0);
+	facePoseOld.resize(FACE_POSE_SIZE, 0);
 
 	faceFbo.allocate(1024, 768);
 
@@ -164,7 +169,7 @@ void ofApp::init(){
 
 	box2d.init();
 	//box2d.createGround();
-	box2d.setGravity(0, 0.2);
+	box2d.setGravity(0, 2);
 	box2d.setFPS(30.0);
 
 	edge = ofPtr<ofxBox2dEdge>(new ofxBox2dEdge);
@@ -178,6 +183,12 @@ void ofApp::init(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	if (ofGetFrameNum() % 2) {
+		float r = ofRandom(4, 10);
+		circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
+		circles.back().get()->setPhysics(0.3, 0.7, 0.1);
+		circles.back().get()->setup(box2d.getWorld(), ofGetWidth() / 2, 0, r);
+	}
 	box2d.update();
 
 	while (receiver.hasWaitingMessages()){
@@ -205,9 +216,14 @@ void ofApp::update(){
 			}
 		}
 		else if (m.getAddress() == "/osceleton/face") {
+			ofVec2f faceVel;
 			for (int i = 0; i < FACE_POSE_SIZE; i++) {
 				facePose.at(i) = m.getArgAsFloat(i + 2);
 			}
+			faceVel.x = facePose.at(0) - facePoseOld.at(0);
+			faceVel.y = facePose.at(1) - facePoseOld.at(1);
+			facePoseOld = facePose;
+			box2d.setGravity(ofVec2f(0, 2).getRotated(-facePose.at(5)) - faceVel * 0.02f);
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/pen/coord") {
 			int id = m.getArgAsInt32(0);
@@ -230,6 +246,8 @@ void ofApp::update(){
 			stampPoints.at(id) = ofPoint(x, y);
 		}
 	}
+
+	ofRemove(circles, shouldRemove);
 }
 
 //--------------------------------------------------------------
@@ -276,8 +294,8 @@ void ofApp::draw(){
 		
 		for (int i = 0; i<circles.size(); i++) {
 			ofFill();
-			ofSetHexColor(0xf6c738);
-			circles[i].get()->draw();
+			ofSetColor(ofColor::lightCyan);
+			ofCircle(circles[i].get()->getPosition(), circles[i].get()->getRadius());
 		}
 
 		for (int i = 0; i < lines.size(); i++) {
@@ -388,13 +406,6 @@ void ofApp::keyPressed(int key){
 	}
 	ofLogWarning() << moveKey;
 
-	if (key == 'c') {
-		float r = ofRandom(4, 20);
-		circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
-		circles.back().get()->setPhysics(0.3, 0.5, 0.1);
-		circles.back().get()->setup(box2d.getWorld(), mouseX, mouseY, r);
-
-	}
 }
 
 //--------------------------------------------------------------
