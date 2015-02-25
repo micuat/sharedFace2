@@ -64,6 +64,9 @@ private:
 	bool pathLoaded;
 	bool toStoreMesh;
 
+	enum RenderMode { BASIC_MODE, BOX2D_MODE, FLUID_MODE };
+	RenderMode renderMode;
+
 	ofxBox2d box2d;
 	vector <ofPtr<ofxBox2dCircle> > circles;
 	ofPtr <ofxBox2dEdge> edge;

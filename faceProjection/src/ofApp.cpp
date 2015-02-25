@@ -169,7 +169,7 @@ void ofApp::init(){
 
 	box2d.init();
 	//box2d.createGround();
-	box2d.setGravity(0, 2);
+	box2d.setGravity(0, 0.5f);
 	box2d.setFPS(30.0);
 
 	edge = ofPtr<ofxBox2dEdge>(new ofxBox2dEdge);
@@ -187,9 +187,8 @@ void ofApp::update(){
 		float r = ofRandom(4, 10);
 		circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
 		circles.back().get()->setPhysics(0.3, 0.7, 0.1);
-		circles.back().get()->setup(box2d.getWorld(), ofGetWidth() / 2, 0, r);
+		circles.back().get()->setup(box2d.getWorld(), ofGetWidth() / 2 + ofRandom(-300, 300), 0, r);
 	}
-	box2d.update();
 
 	while (receiver.hasWaitingMessages()){
 		// get the next message
@@ -223,7 +222,7 @@ void ofApp::update(){
 			faceVel.x = facePose.at(0) - facePoseOld.at(0);
 			faceVel.y = facePose.at(1) - facePoseOld.at(1);
 			facePoseOld = facePose;
-			box2d.setGravity(ofVec2f(0, 2).getRotated(-facePose.at(5)) - faceVel * 0.02f);
+			box2d.setGravity(ofVec2f(0, 0.5f).getRotated(-facePose.at(5)) - faceVel * 0.02f);
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/pen/coord") {
 			int id = m.getArgAsInt32(0);
@@ -235,6 +234,10 @@ void ofApp::update(){
 			while (id >(int)lines.size() - 1) {
 				lines.push_back(ofMesh());
 				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
+				float rad = ofRandom(4, 10);
+				circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
+				circles.back().get()->setPhysics(0.5, 0.7, 0.1);
+				circles.back().get()->setup(box2d.getWorld(), x, y, rad);
 			}
 			lines.at(id).addVertex(ofVec3f(x, y, 0));
 			lines.at(id).addColor(ofFloatColor(r, g, b));
@@ -248,6 +251,7 @@ void ofApp::update(){
 	}
 
 	ofRemove(circles, shouldRemove);
+	box2d.update();
 }
 
 //--------------------------------------------------------------
@@ -292,32 +296,43 @@ void ofApp::draw(){
 		ofScale(-1, 1, 1);
 		ofTranslate(-ofGetWidth() / 2.0f, 0, 0);
 		
-		for (int i = 0; i<circles.size(); i++) {
-			ofFill();
-			ofSetColor(ofColor::lightCyan);
-			ofCircle(circles[i].get()->getPosition(), circles[i].get()->getRadius());
-		}
+		if (renderMode == BASIC_MODE) {
+			for (int i = 0; i < lines.size(); i++) {
+				lines.at(i).draw();
+			}
+			ofEnableBlendMode(OF_BLENDMODE_SCREEN);
+			for (int i = 0; i < stampPoints.size(); i++) {
+				ofFill();
+				ofPushMatrix();
+				if (i == 0)
+					ofSetColor(255, 0, 0);
+				else if (i == 1)
+					ofSetColor(0, 255, 0);
+				else
+					ofSetColor(0, 0, 255);
 
-		for (int i = 0; i < lines.size(); i++) {
-			lines.at(i).draw();
+				ofTranslate(stampPoints.at(i));
+				drawPolygon(ofMap(faceAnimation.at(3), 0, 1, 0, 0.3, true), 0.6f);
+				ofPopMatrix();
+			}
+			ofDisableBlendMode();
 		}
-		ofEnableBlendMode(OF_BLENDMODE_SCREEN);
-		for (int i = 0; i < stampPoints.size(); i++) {
-			ofFill();
-			ofPushMatrix();
-			if (i == 0)
-				ofSetColor(255, 0, 0);
-			else if (i == 1)
-				ofSetColor(0, 255, 0);
-			else
-				ofSetColor(0, 0, 255);
-			
-			ofTranslate(stampPoints.at(i));
-			drawPolygon(ofMap(faceAnimation.at(3), 0, 1, 0, 0.3, true) , 0.6f);
-			ofPopMatrix();
+		else if (renderMode == BOX2D_MODE) {
+			for (int i = 0; i<circles.size(); i++) {
+				ofFill();
+				ofFloatColor c;
+				c.setHsb(circles[i].get()->density, 1, 1);
+				ofSetColor(c);
+				ofCircle(circles[i].get()->getPosition(), circles[i].get()->getRadius());
+			}
 		}
-		ofDisableBlendMode();
 		
+		// eye mask
+		ofSetColor(0);
+		ofCircle(438, 350, 50);
+		ofCircle(585, 350, 50);
+		ofSetColor(255);
+
 		faceFbo.end();
 
 		ofEnableDepthTest();
@@ -384,6 +399,9 @@ void ofApp::keyPressed(int key){
 		case '1': cameraMode = EASYCAM_MODE; break;
 		case '2': cameraMode = PRO_MODE; break;
 		case '3': cameraMode = CAM_MODE; break;
+		case '4': renderMode = BASIC_MODE; break;
+		case '5': renderMode = BOX2D_MODE; break;
+		case '6': renderMode = FLUID_MODE; break;
 		}
 
 	}
