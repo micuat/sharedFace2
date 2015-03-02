@@ -354,6 +354,26 @@ void ofApp::draw(){
 		else if (renderMode == FLUID_MODE) {
 			fluid.draw();
 		}
+		else if (renderMode == FAKE3D_MODE) {
+			ofPoint p(511, 452, 0);
+			ofPoint pTip(0, 0, -200);
+			pTip.rotate(-facePose.at(3), ofVec3f(1, 0, 0));
+			pTip.rotate(-facePose.at(4), ofVec3f(0, 1, 0));
+			pTip.rotate(-facePose.at(5), ofVec3f(0, 0, 1));
+
+			ofPushMatrix();
+			ofTranslate(p);
+
+			ofPushStyle();
+			ofSetLineWidth(5);
+			ofSetColor(ofColor::red);
+			ofLine(ofVec2f(), pTip);
+			ofSetColor(ofColor::white);
+			ofLine(ofVec2f(0, 50), pTip);
+			ofPopStyle();
+
+			ofPopMatrix();
+		}
 		
 		// eye mask
 		ofSetColor(0);
@@ -435,6 +455,9 @@ void ofApp::keyPressed(int key){
 			break;
 		case '6':
 			renderMode = FLUID_MODE;
+			break;
+		case '7':
+			renderMode = FAKE3D_MODE;
 			break;
 		}
 
