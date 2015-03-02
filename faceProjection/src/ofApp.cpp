@@ -268,6 +268,38 @@ void ofApp::update(){
 			float y = m.getArgAsFloat(2);
 			stampPoints.at(id) = ofPoint(x, y);
 		}
+		else if (m.getAddress() == "/sharedFace/canvas/leap/index/coord") {
+			int id = m.getArgAsInt32(0);
+			float x = m.getArgAsFloat(1);
+			float y = m.getArgAsFloat(2);
+			float z = m.getArgAsFloat(3);
+			float r = m.getArgAsFloat(4);
+			float g = m.getArgAsFloat(5);
+			float b = m.getArgAsFloat(6);
+			while (id >(int)lines.size() - 1) {
+				lines.push_back(ofMesh());
+				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
+			}
+			lines.at(id).addVertex(ofVec3f(ofMap(x, 3, -3, 0, ofGetWidth()), ofMap(y, 3, -3, 0, ofGetHeight()), z));
+			lines.at(id).addColor(ofFloatColor(r, g, b));
+			ofLogError() << x;
+		}
+		else if (m.getAddress() == "/sharedFace/canvas/leap/cursor/coord") {
+			int id = m.getArgAsInt32(0);
+			float x = m.getArgAsFloat(1);
+			float y = m.getArgAsFloat(2);
+			float z = m.getArgAsFloat(3);
+			float r = m.getArgAsFloat(4);
+			float g = m.getArgAsFloat(5);
+			float b = m.getArgAsFloat(6);
+			while (id >(int)lines.size() - 1) {
+				lines.push_back(ofMesh());
+				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
+			}
+			lines.at(id).addVertex(ofVec3f(ofMap(x, 3, -3, 0, ofGetWidth()), ofMap(y, 3, -3, 0, ofGetHeight()), z));
+			lines.at(id).addColor(ofFloatColor(r, g, b));
+			ofLogError() << x;
+		}
 	}
 
 	if (renderMode == BOX2D_MODE) {
@@ -337,7 +369,8 @@ void ofApp::draw(){
 					ofSetColor(0, 0, 255);
 
 				ofTranslate(stampPoints.at(i));
-				drawPolygon(ofMap(faceAnimation.at(3), 0, 1, 0, 0.3, true), 0.6f);
+				//drawPolygon(ofMap(faceAnimation.at(3), 0, 1, 0, 0.3, true), 0.6f);
+				ofCircle(0, 0, 20);
 				ofPopMatrix();
 			}
 			ofDisableBlendMode();
