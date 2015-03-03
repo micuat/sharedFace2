@@ -280,7 +280,7 @@ void ofApp::update(){
 				lines.push_back(ofMesh());
 				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
 			}
-			lines.at(id).addVertex(ofVec3f(ofMap(x, 3, -3, 0, ofGetWidth()), ofMap(y, 3, -3, 0, ofGetHeight()), z));
+			lines.at(id).addVertex(ofVec3f(x, y, z));
 			lines.at(id).addColor(ofFloatColor(r, g, b));
 			ofLogError() << x;
 		}
@@ -296,7 +296,7 @@ void ofApp::update(){
 				lines.push_back(ofMesh());
 				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
 			}
-			lines.at(id).addVertex(ofVec3f(ofMap(x, 3, -3, 0, ofGetWidth()), ofMap(y, 3, -3, 0, ofGetHeight()), z));
+			lines.at(id).addVertex(ofVec3f(x, y, z));
 			lines.at(id).addColor(ofFloatColor(r, g, b));
 			ofLogError() << x;
 		}
