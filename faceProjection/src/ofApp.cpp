@@ -262,16 +262,10 @@ void ofApp::update(){
 			lines.at(id).addVertex(ofVec3f(x, y, 0));
 			lines.at(id).addColor(ofFloatColor(r, g, b));
 		}
-		else if (m.getAddress() == "/sharedFace/canvas/stamp/coord") {
-			int id = m.getArgAsInt32(0);
-			float x = m.getArgAsFloat(1);
-			float y = m.getArgAsFloat(2);
-			stampPoints.at(id) = ofPoint(x, y);
-		}
 		else if (m.getAddress() == "/sharedFace/canvas/leap/index/coord") {
 			int id = m.getArgAsInt32(0);
-			float x = m.getArgAsFloat(1);
-			float y = m.getArgAsFloat(2);
+			float x = ofMap(m.getArgAsFloat(1), 6, -6, 0, 1024);
+			float y = ofMap(m.getArgAsFloat(2), 6, -6, 0, 1024);
 			float z = m.getArgAsFloat(3);
 			float r = m.getArgAsFloat(4);
 			float g = m.getArgAsFloat(5);
@@ -280,25 +274,18 @@ void ofApp::update(){
 				lines.push_back(ofMesh());
 				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
 			}
-			lines.at(id).addVertex(ofVec3f(x, y, z));
-			lines.at(id).addColor(ofFloatColor(r, g, b));
-			ofLogError() << x;
-		}
-		else if (m.getAddress() == "/sharedFace/canvas/leap/cursor/coord") {
-			int id = m.getArgAsInt32(0);
-			float x = m.getArgAsFloat(1);
-			float y = m.getArgAsFloat(2);
-			float z = m.getArgAsFloat(3);
-			float r = m.getArgAsFloat(4);
-			float g = m.getArgAsFloat(5);
-			float b = m.getArgAsFloat(6);
-			while (id >(int)lines.size() - 1) {
-				lines.push_back(ofMesh());
-				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
+			ofVec3f vPrev;
+			ofVec3f v(x, y, z);
+			if (lines.at(id).getNumVertices() > 0) {
+				vPrev = lines.at(id).getVertex(lines.at(id).getNumVertices() - 1);
 			}
-			lines.at(id).addVertex(ofVec3f(x, y, z));
-			lines.at(id).addColor(ofFloatColor(r, g, b));
-			ofLogError() << x;
+			else {
+				vPrev = v;
+			}
+			lines.at(id).addVertex(v);
+			lines.at(id).addColor(ofFloatColor(r, g, b, ofMap(v.distance(vPrev), 0, 20, 1.0, 0.0, true)));
+
+			stampPoints.at(0) = ofPoint(x, y);
 		}
 	}
 
@@ -354,6 +341,7 @@ void ofApp::draw(){
 		ofTranslate(-ofGetWidth() / 2.0f, 0, 0);
 		
 		if (renderMode == BASIC_MODE) {
+			ofEnableAlphaBlending();
 			for (int i = 0; i < lines.size(); i++) {
 				lines.at(i).draw();
 			}
@@ -370,7 +358,10 @@ void ofApp::draw(){
 
 				ofTranslate(stampPoints.at(i));
 				//drawPolygon(ofMap(faceAnimation.at(3), 0, 1, 0, 0.3, true), 0.6f);
-				ofCircle(0, 0, 20);
+				//ofCircle(0, 0, 20);
+				ofSetLineWidth(3.0f);
+				ofLine(-20, 0, 20, 0);
+				ofLine(0, -20, 0, 20);
 				ofPopMatrix();
 			}
 			ofDisableBlendMode();
