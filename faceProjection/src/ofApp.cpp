@@ -195,11 +195,20 @@ void ofApp::init(){
 	fluid.addConstantForce(ofPoint(438, 350), ofPoint(), ofFloatColor(0, 0.05, 0.1), 10.f);
 	fluid.addConstantForce(ofPoint(585, 350), ofPoint(), ofFloatColor(0, 0.05, 0.1), 10.f);
 
+	kalmanPosition.init(1e-2, 1e3, true);
+	predictedMatrix.makeIdentityMatrix();
+
 	renderMode = BASIC_MODE;
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	/*if (ofGetFrameNum() % 600 == 0) {
+		double a = pow(10, ofMap(mouseX, 0, 1024, -3, 3));
+		double b = pow(10, ofMap(mouseY, 0, 768, -3, 3));
+		kalmanPosition.init(a, b, true);
+		ofLogError() << a << " " << b;
+	}*/
 	if (ofGetFrameNum() % 2 && renderMode == BOX2D_MODE) {
 		float r = ofRandom(4, 10);
 		circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
@@ -296,6 +305,18 @@ void ofApp::update(){
 	else if (renderMode == FLUID_MODE) {
 		fluid.update();
 	}
+
+	ofVec3f cC(-facePose.at(0), facePose.at(1), facePose.at(2));
+
+	// latency compensation
+	float dt = 4.46f;
+	//float dt = 0;
+
+	// predict centroid
+	kalmanPosition.update(cC*1000);
+	cC = kalmanPosition.getEstimation();
+	ofVec3f v = kalmanPosition.getVelocity();
+	predictedMatrix.setTranslation(v * dt / 1000);
 }
 
 //--------------------------------------------------------------
@@ -431,6 +452,7 @@ void ofApp::draw(){
 				0, 0, 0, 1);
 			extrinsics = extrinsics.t();
 			glMultMatrixd((GLdouble*)extrinsics.ptr(0, 0));
+			if (!ofGetKeyPressed('a')) glMultMatrixf((GLfloat*)predictedMatrix.getPtr());
 
 			ofViewport(moveKey.x, moveKey.y);
 
@@ -441,7 +463,6 @@ void ofApp::draw(){
 		ofSetColor(255, 255);
 		ofSetLineWidth(1);
 		glPointSize(3);
-
 
 		shader.begin();
 		shader.setUniform2f("ppoint", proIntrinsic.at<double>(0, 2) / ofGetWidth(), proIntrinsic.at<double>(1, 2) / ofGetHeight());

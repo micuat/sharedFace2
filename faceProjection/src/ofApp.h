@@ -72,6 +72,9 @@ private:
 	ofPtr <ofxBox2dEdge> edge;
 
 	ofxFluid fluid;
+
+	ofxCv::KalmanPosition kalmanPosition;
+	ofMatrix4x4 predictedMatrix;
 };
 
 static const int faceTriangles[206][3] = { { 11, 0, 1 },
