@@ -27,6 +27,7 @@ void ofApp::setup(){
 	mesh.load(ofToDataPath("mesh.ply"));
 	polylines.resize(1);
 
+	sender.setup("localhost", PORT);
 }
 
 
@@ -64,14 +65,24 @@ void ofApp::update(){
                 ofPoint tip = simpleHands[i].fingers[ fingerTypes[f] ].tip; // fingertip
                 fingersFound.push_back(id);
 
-				if( i == 0 && f == 1 ) {
+				if( i == 0 && f >= 0 && f <= 2 ) {
 //					if(tip.distance(simpleHands[i].handPos) > 100)
 					ofVec3f mp = mcp - pip;
 					ofVec3f td = tip - dip;
 					
-					if(tip.z < -15)
+					if(tip.z < -12) {
 						polylines.back().addVertex(tip);
-					else {
+						ofxOscMessage m;
+						m.setAddress("/sharedFace/canvas/leap/index/coord");
+						m.addIntArg(polylines.size());
+						m.addFloatArg(ofMap(tip.x, -75, 75, 345, 680));
+						m.addFloatArg(ofMap(tip.y, 105, 295, 598, 124));
+						m.addFloatArg(tip.z);
+						m.addFloatArg(1.0f * (f == 0));
+						m.addFloatArg(1.0f * (f == 1));
+						m.addFloatArg(1.0f * (f == 2));
+						sender.sendMessage(m);
+					} else {
 						if(polylines.back().size() > 0) {
 							polylines.push_back(ofPolyline());
 						}

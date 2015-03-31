@@ -2,6 +2,9 @@
 
 #include "ofMain.h"
 #include "ofxLeapMotion2.h"
+#include "ofxOsc.h"
+
+#define PORT 57121
 
 class ofApp : public ofBaseApp{
     
@@ -28,4 +31,6 @@ public:
 	ofEasyCam cam;
 	ofMesh mesh;
 	vector<ofPolyline> polylines;
+
+	ofxOscSender sender;
 };
