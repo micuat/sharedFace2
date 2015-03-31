@@ -8,10 +8,14 @@ Naoto Hieda <micuat@gmail.com> 2014
 
 #include "ofMain.h"
 
+//#define ENABLE_BOX2D
+
 #include "ofxCv.h"
 #include "ofxOsc.h"
 #include "ofxFluid.h"
+#ifdef ENABLE_BOX2D
 #include "ofxBox2d.h"
+#endif
 
 #define PORT 57121
 #define NUM_POINTS 121
@@ -67,9 +71,11 @@ private:
 	enum RenderMode { BASIC_MODE, BOX2D_MODE, FLUID_MODE, FAKE3D_MODE };
 	RenderMode renderMode;
 
+#ifdef ENABLE_BOX2D
 	ofxBox2d box2d;
 	vector <ofPtr<ofxBox2dCircle> > circles;
 	ofPtr <ofxBox2dEdge> edge;
+#endif
 
 	ofxFluid fluid;
 

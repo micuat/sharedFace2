@@ -1,8 +1,10 @@
 #include "ofApp.h"
 
+#ifdef ENABLE_BOX2D
 static bool shouldRemove(ofPtr<ofxBox2dBaseShape>shape) {
 	return !ofRectangle(0, -400, ofGetWidth(), ofGetHeight() + 400).inside(shape.get()->getPosition());
 }
+#endif
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -167,6 +169,7 @@ void ofApp::init(){
 	shader.setUniform1f("dist", 0);
 	shader.end();
 
+#ifdef ENABLE_BOX2D
 	box2d.init();
 	//box2d.createGround();
 	box2d.setGravity(0, 0.5f);
@@ -179,26 +182,28 @@ void ofApp::init(){
 	edge.get()->addVertex(ofVec2f(553.019, 589.462));
 	edge.get()->addVertex(ofVec2f(628.369, 539.216));
 	edge.get()->create(box2d.getWorld());
-	
-	fluid.allocate(ofGetWidth(), ofGetHeight(), 0.25);
-	fluid.dissipation = 0.99;
-	fluid.velocityDissipation = 0.99;
-	fluid.setGravity(ofVec2f(0.0, 0.005));
-	fluid.begin();
-	ofSetColor(255);
+#endif
+
+	fluid.allocate(ofGetWidth(), ofGetHeight(), 0.125);
+	fluid.dissipation = 1;
+	fluid.velocityDissipation = 0.95;
+	fluid.setGravity(ofVec2f(0.0, 0.05));
+//	fluid.begin();
+//	ofSetColor(255);
 //	ofCircle(438, 350, 20);
 //	ofCircle(585, 350, 20);
-	ofTriangle(511, 371, 484, 451, 539, 451);
-	fluid.end();
-	fluid.setUseObstacles(true);
-	fluid.addConstantForce(ofPoint(ofGetWidth() / 2, 0), ofPoint(), ofFloatColor(0.01, 0, 0), 10.f);
-	fluid.addConstantForce(ofPoint(438, 350), ofPoint(), ofFloatColor(0, 0.05, 0.1), 10.f);
-	fluid.addConstantForce(ofPoint(585, 350), ofPoint(), ofFloatColor(0, 0.05, 0.1), 10.f);
+//	ofTriangle(511, 371, 484, 451, 539, 451);
+//	fluid.end();
+	//fluid.setUseObstacles(true);
+	fluid.setUseObstacles(false);
+	//fluid.addConstantForce(ofPoint(ofGetWidth() / 2, 0), ofPoint(), ofFloatColor(0.01, 0, 0), 10.f);
+	//fluid.addConstantForce(ofPoint(438, 350), ofPoint(), ofFloatColor(0, 0.05, 0.1), 10.f);
+	//fluid.addConstantForce(ofPoint(585, 350), ofPoint(), ofFloatColor(0, 0.05, 0.1), 10.f);
 
 	kalmanPosition.init(1e-2, 1e3, true);
 	predictedMatrix.makeIdentityMatrix();
 
-	renderMode = BASIC_MODE;
+	renderMode = BOX2D_MODE;
 }
 
 //--------------------------------------------------------------
@@ -209,12 +214,14 @@ void ofApp::update(){
 		kalmanPosition.init(a, b, true);
 		ofLogError() << a << " " << b;
 	}*/
+#ifdef ENABLE_BOX2D
 	if (ofGetFrameNum() % 2 && renderMode == BOX2D_MODE) {
 		float r = ofRandom(4, 10);
 		circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
 		circles.back().get()->setPhysics(0.3, 0.7, 0.1);
 		circles.back().get()->setup(box2d.getWorld(), ofGetWidth() / 2 + ofRandom(-300, 300), 0, r);
 	}
+#endif
 
 	while (receiver.hasWaitingMessages()){
 		// get the next message
@@ -248,8 +255,10 @@ void ofApp::update(){
 			faceVel.x = facePose.at(0) - facePoseOld.at(0);
 			faceVel.y = facePose.at(1) - facePoseOld.at(1);
 			facePoseOld = facePose;
+#ifdef ENABLE_BOX2D
 			box2d.setGravity(ofVec2f(0, 0.5f).getRotated(-facePose.at(5)) - faceVel * 0.02f);
-			fluid.setGravity(ofVec2f(0, 0.005).getRotated(-facePose.at(5)) - faceVel * 0.0002f);
+#endif
+			fluid.setGravity(ofVec2f(0, 0.05).getRotated(-facePose.at(5)) - faceVel * 0.0002f);
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/pen/coord") {
 			int id = m.getArgAsInt32(0);
@@ -261,11 +270,12 @@ void ofApp::update(){
 			while (id >(int)lines.size() - 1) {
 				lines.push_back(ofMesh());
 				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
+#ifdef ENABLE_BOX2D
 				float rad = ofRandom(4, 10);
 				circles.push_back(ofPtr<ofxBox2dCircle>(new ofxBox2dCircle));
 				circles.back().get()->setPhysics(0.5, 0.7, 0.1);
 				circles.back().get()->setup(box2d.getWorld(), x, y, rad);
-
+#endif
 				fluid.addTemporalForce(ofVec2f(x, y), ofVec2f(), ofFloatColor(r, g, b), 3.0f);
 			}
 			lines.at(id).addVertex(ofVec3f(x, y, 0));
@@ -273,8 +283,8 @@ void ofApp::update(){
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/leap/index/coord") {
 			int id = m.getArgAsInt32(0);
-			float x = ofMap(m.getArgAsFloat(1), 6, -6, 0, 1024);
-			float y = ofMap(m.getArgAsFloat(2), 6, -6, 0, 1024);
+			float x = m.getArgAsFloat(1);
+			float y = m.getArgAsFloat(2);
 			float z = m.getArgAsFloat(3);
 			float r = m.getArgAsFloat(4);
 			float g = m.getArgAsFloat(5);
@@ -295,17 +305,23 @@ void ofApp::update(){
 			lines.at(id).addColor(ofFloatColor(r, g, b, ofMap(v.distance(vPrev), 0, 20, 1.0, 0.0, true)));
 
 			stampPoints.at(0) = ofPoint(x, y);
+
+			//fluid.addConstantForce(ofPoint(ofGetWidth() / 2, 0), ofPoint(), ofFloatColor(0.01, 0, 0), 10.f);
+			fluid.addTemporalForce(v, (v - vPrev) * 0.125, ofFloatColor(r, g, b) * 0.25, 3);
+
 		}
 	}
 
 	if (renderMode == BOX2D_MODE) {
+#ifdef ENABLE_BOX2D
 		ofRemove(circles, shouldRemove);
 		box2d.update();
+#endif
 	}
 	else if (renderMode == FLUID_MODE) {
 		fluid.update();
 	}
-
+	return;
 	ofVec3f cC(-facePose.at(0), facePose.at(1), facePose.at(2));
 
 	// latency compensation
@@ -388,6 +404,7 @@ void ofApp::draw(){
 			ofDisableBlendMode();
 		}
 		else if (renderMode == BOX2D_MODE) {
+#ifdef ENABLE_BOX2D
 			for (int i = 0; i<circles.size(); i++) {
 				ofFill();
 				ofFloatColor c;
@@ -395,6 +412,7 @@ void ofApp::draw(){
 				ofSetColor(c);
 				ofCircle(circles[i].get()->getPosition(), circles[i].get()->getRadius());
 			}
+#endif
 		}
 		else if (renderMode == FLUID_MODE) {
 			fluid.draw();
@@ -452,7 +470,7 @@ void ofApp::draw(){
 				0, 0, 0, 1);
 			extrinsics = extrinsics.t();
 			glMultMatrixd((GLdouble*)extrinsics.ptr(0, 0));
-			if (!ofGetKeyPressed('a')) glMultMatrixf((GLfloat*)predictedMatrix.getPtr());
+			//if (!ofGetKeyPressed('a')) glMultMatrixf((GLfloat*)predictedMatrix.getPtr());
 
 			ofViewport(moveKey.x, moveKey.y);
 
@@ -510,6 +528,10 @@ void ofApp::keyPressed(int key){
 
 	if (key == 'f') {
 		ofToggleFullscreen();
+	}
+
+	if (key == 'c') {
+		fluid.clear();
 	}
 
 	if (key == OF_KEY_UP) {
