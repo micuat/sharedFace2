@@ -97,6 +97,7 @@ void ofApp::update() {
 		m.addIntArg(0);
 		m.addIntArg(0);
 		
+		faceMesh = objectMesh;
 		ofMatrix4x4 mt = ofMatrix4x4::getTransposedOf(mat);
 		for(int i = 0; i < objectMesh.getNumVertices(); i++) {
 			ofVec4f v = objectMesh.getVertex(i);
@@ -105,6 +106,15 @@ void ofApp::update() {
 			m.addFloatArg(-v.x / 1000);
 			m.addFloatArg(-v.y / 1000);
 			m.addFloatArg(v.z / 1000);
+			
+			ofVec3f uv = imageMesh.getVertex(i);
+			ofVec3f p = kinect.getWorldCoordinateAt(uv.x, uv.y, depthImg.at<float>(uv.y, uv.x));
+			
+			if(p.z <= 0) {
+				faceMesh.setVertex(i, v);
+			} else {
+				faceMesh.setVertex(i, p);
+			}
 		}
 		sender.sendMessage(m);
 	}
@@ -125,7 +135,7 @@ void ofApp::draw() {
 		drawPointCloud();
 		easyCam.end();
 	} else {
-		ofxCv::drawMat(colorImg, 0, 0);
+		ofxCv::drawMat(depthImg, 0, 0);
 		ofSetColor(255, 255);
 		tracker.getImageMesh().drawWireframe();
 	}
@@ -160,10 +170,10 @@ void ofApp::drawPointCloud() {
 	ofTranslate(0, 0, -1000); // center the points a bit
 	ofEnableDepthTest();
 	mesh.drawVertices();
-	glMultMatrixf((GLfloat*)mat.getPtr());
+//	glMultMatrixf((GLfloat*)mat.getPtr());
 	ofPushStyle();
 	ofSetColor(255, 128);
-	tracker.getObjectMesh().draw();
+	faceMesh.draw();
 	ofPopStyle();
 	ofDisableDepthTest();
 	ofPopMatrix();
