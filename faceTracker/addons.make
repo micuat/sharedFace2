@@ -1,0 +1,5 @@
+ofxKinect
+ofxOpenCv
+ofxOsc
+ofxCv
+ofxFaceTracker

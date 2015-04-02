@@ -229,7 +229,6 @@ void ofApp::update(){
 		receiver.getNextMessage(&m);
 
 		if (m.getAddress() == "/osceleton/face_mesh"){
-			
 			for (int i = 0; i < NUM_POINTS; i++) {
 				float x = - m.getArgAsFloat(i * 3 + 2);
 				float y = - m.getArgAsFloat(i * 3 + 3);
@@ -499,8 +498,6 @@ void ofApp::draw(){
 			ofDisableDepthTest();
 			faceFbo.draw(0, 0);
 //		}
-
-		ofSetWindowTitle(ofToString(smoothedVol));
 	}
 }
 
