@@ -184,7 +184,7 @@ void ofApp::init(){
 	edge.get()->create(box2d.getWorld());
 #endif
 
-	fluid.allocate(ofGetWidth(), ofGetHeight(), 0.125);
+	fluid.allocate(ofGetWidth(), ofGetHeight(), 0.25);
 	fluid.dissipation = 1;
 	fluid.velocityDissipation = 0.95;
 	fluid.setGravity(ofVec2f(0.0, 0.05));
@@ -305,7 +305,6 @@ void ofApp::update(){
 
 			stampPoints.at(0) = ofPoint(x, y);
 
-			//fluid.addConstantForce(ofPoint(ofGetWidth() / 2, 0), ofPoint(), ofFloatColor(0.01, 0, 0), 10.f);
 			fluid.addTemporalForce(v, (v - vPrev) * 0.125, ofFloatColor(r, g, b) * 0.25, 3);
 
 		}

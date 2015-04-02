@@ -25,7 +25,7 @@ void ofApp::setup(){
     glEnable(GL_NORMALIZE);
 
 	mesh.load(ofToDataPath("mesh.ply"));
-	polylines.resize(1);
+	polylines.resize(3);
 
 	sender.setup("localhost", PORT);
 }
@@ -70,11 +70,12 @@ void ofApp::update(){
 					ofVec3f mp = mcp - pip;
 					ofVec3f td = tip - dip;
 					
-					if(tip.z < -12) {
-						polylines.back().addVertex(tip);
+					int curIndex = polylines.size() / 3 - 1;
+					if(tip.z < -5) {
+						polylines.at(curIndex * 3 + f).addVertex(tip);
 						ofxOscMessage m;
 						m.setAddress("/sharedFace/canvas/leap/index/coord");
-						m.addIntArg(polylines.size());
+						m.addIntArg(curIndex * 3 + f);
 						m.addFloatArg(ofMap(tip.x, -75, 75, 345, 680));
 						m.addFloatArg(ofMap(tip.y, 105, 295, 598, 124));
 						m.addFloatArg(tip.z);
@@ -83,7 +84,9 @@ void ofApp::update(){
 						m.addFloatArg(1.0f * (f == 2));
 						sender.sendMessage(m);
 					} else {
-						if(polylines.back().size() > 0) {
+						if(polylines.at(curIndex * 3 + f).size() > 0) {
+							polylines.push_back(ofPolyline());
+							polylines.push_back(ofPolyline());
 							polylines.push_back(ofPolyline());
 						}
 					}
@@ -203,7 +206,7 @@ void ofApp::draw(){
 void ofApp::keyPressed(int key){
 	if(key == 'c') {
 		polylines.clear();
-		polylines.resize(1);
+		polylines.resize(3);
 	}
 }
 
