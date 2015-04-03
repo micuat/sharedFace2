@@ -71,25 +71,25 @@ void ofApp::update(){
 					ofVec3f td = tip - dip;
 					
 					int curIndex = polylines.size() / 3 - 1;
-					if(tip.z < -5) {
-						polylines.at(curIndex * 3 + simpleHands[i].isLeft).addVertex(tip);
-						ofxOscMessage m;
-						m.setAddress("/sharedFace/canvas/leap/index/coord");
-						m.addIntArg(curIndex * 3 + simpleHands[i].isLeft);
-						m.addFloatArg(ofMap(tip.x, -75, 75, 345, 680));
-						m.addFloatArg(ofMap(tip.y, 115, 295, 598, 124));
-						m.addFloatArg(tip.z);
-						if(simpleHands[i].isLeft) {
-							m.addFloatArg(0.0f);
-							m.addFloatArg(0.0f);
-							m.addFloatArg(0.0f);
-						} else {
-							m.addFloatArg(1.0f);
-							m.addFloatArg(1.0f);
-							m.addFloatArg(1.0f);
-						}
-						sender.sendMessage(m);
+					polylines.at(curIndex * 3 + simpleHands[i].isLeft).addVertex(tip);
+					ofxOscMessage m;
+					m.setAddress("/sharedFace/canvas/leap/index/coord");
+					m.addIntArg(curIndex * 3 + simpleHands[i].isLeft);
+					m.addFloatArg(ofMap(tip.x, -75, 75, 345, 680));
+					m.addFloatArg(ofMap(tip.y, 115, 295, 598, 124));
+					m.addFloatArg(tip.z);
+					if(simpleHands[i].isLeft) {
+						m.addFloatArg(0.0f);
+						m.addFloatArg(0.0f);
+						m.addFloatArg(0.0f);
 					} else {
+						m.addFloatArg(1.0f);
+						m.addFloatArg(1.0f);
+						m.addFloatArg(1.0f);
+					}
+					m.addIntArg(i);
+					sender.sendMessage(m);
+					if(tip.z > -5) {
 						if(polylines.at(curIndex * 3 + simpleHands[i].isLeft).size() > 0) {
 							polylines.push_back(ofPolyline());
 							polylines.push_back(ofPolyline());

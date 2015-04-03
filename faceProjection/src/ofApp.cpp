@@ -206,6 +206,8 @@ void ofApp::init(){
 	predictedMatrix.makeIdentityMatrix();
 
 	renderMode = FLUID_MODE;
+	
+	lastCursorCount = 0;
 }
 
 //--------------------------------------------------------------
@@ -289,6 +291,7 @@ void ofApp::update(){
 			float r = m.getArgAsFloat(4);
 			float g = m.getArgAsFloat(5);
 			float b = m.getArgAsFloat(6);
+			int hand = m.getArgAsInt32(7);
 			if(canvasMirror) {
 				x = ofGetWidth() - x;
 			}
@@ -296,30 +299,32 @@ void ofApp::update(){
 				lines.push_back(ofMesh());
 				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
 			}
-			ofVec3f vPrev;
-			ofVec3f v(x, y, z);
-			if (lines.at(id).getNumVertices() > 0) {
-				vPrev = lines.at(id).getVertex(lines.at(id).getNumVertices() - 1);
-			}
-			else {
-				vPrev = v;
-			}
-			lines.at(id).addVertex(v);
-			ofColor c = penColor;
-			c.a = ofMap(v.distance(vPrev), 0, 20, 1.0, 0.0, true);
-			lines.at(id).addColor(c);
-
 			stampPoints.at(0) = ofPoint(x, y);
+			lastCursorCount = ofGetFrameNum();
+			
+			if(z < -5) {
+				ofVec3f vPrev;
+				ofVec3f v(x, y, z);
+				if (lines.at(id).getNumVertices() > 0) {
+					vPrev = lines.at(id).getVertex(lines.at(id).getNumVertices() - 1);
+				}
+				else {
+					vPrev = v;
+				}
+				lines.at(id).addVertex(v);
+				ofColor c = penColor;
+				c.a = ofMap(v.distance(vPrev), 0, 20, 1.0, 0.0, true);
+				lines.at(id).addColor(c);
 
-			ofVec2f gForce = ofVec2f(0, fluidGravityConst * fluidGravityCoeff).getRotated(-facePose.at(5));
-			float rad = 3;
-			float temp = 10;
-			if( penColor.r == 0 && penColor.g == 0 && penColor.b == 0 ) {
-				rad = 5;
-				temp = 50;
+				ofVec2f gForce = ofVec2f(0, fluidGravityConst * fluidGravityCoeff).getRotated(-facePose.at(5));
+				float rad = 3;
+				float temp = 10;
+				if( penColor.r == 0 && penColor.g == 0 && penColor.b == 0 ) {
+					rad = 5;
+					temp = 50;
+				}
+				fluid.addTemporalForce(v, (v - vPrev) * 0.125 + gForce, penColor * 0.25, rad, temp);
 			}
-			fluid.addTemporalForce(v, (v - vPrev) * 0.125 + gForce, penColor * 0.25, rad, temp);
-
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/nodejs/color/hue") {
 			float hue = m.getArgAsFloat(0);
@@ -457,6 +462,19 @@ void ofApp::draw(){
 		}
 		else if (renderMode == FLUID_MODE) {
 			fluid.draw();
+			if( ofGetFrameNum() - lastCursorCount < 60 ) {
+				for (int i = 0; i < stampPoints.size(); i++) {
+					ofFill();
+					ofPushMatrix();
+					ofSetColor(128);
+					
+					ofTranslate(stampPoints.at(i));
+					ofSetLineWidth(3.0f);
+					ofLine(-20, 0, 20, 0);
+					ofLine(0, -20, 0, 20);
+					ofPopMatrix();
+				}
+			}
 		}
 		else if (renderMode == FAKE3D_MODE) {
 			ofPoint p(511, 452, 0);

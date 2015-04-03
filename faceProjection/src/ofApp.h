@@ -101,6 +101,7 @@ private:
 	
 	const float fluidGravityConst = 2;
 	float fluidGravityCoeff;
+	int lastCursorCount;
 };
 
 #ifdef USE_MSSDK
