@@ -95,6 +95,9 @@ private:
 
 	ofxCv::KalmanPosition kalmanPosition;
 	ofMatrix4x4 predictedMatrix;
+	
+	ofFloatColor penColor;
+	bool canvasMirror;
 };
 
 #ifdef USE_MSSDK

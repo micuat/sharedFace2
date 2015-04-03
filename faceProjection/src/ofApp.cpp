@@ -73,6 +73,8 @@ void ofApp::init(){
 
 	//toStoreMesh = true;
 	toStoreMesh = false;
+	
+	canvasMirror = false;
 
 #define STRINGIFY(A) #A
 	const char *src1v = STRINGIFY
@@ -278,7 +280,7 @@ void ofApp::update(){
 				fluid.addTemporalForce(ofVec2f(x, y), ofVec2f(), ofFloatColor(r, g, b), 3.0f);
 			}
 			lines.at(id).addVertex(ofVec3f(x, y, 0));
-			lines.at(id).addColor(ofFloatColor(r, g, b));
+			lines.at(id).addColor(penColor);
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/leap/index/coord") {
 			int id = m.getArgAsInt32(0);
@@ -288,6 +290,9 @@ void ofApp::update(){
 			float r = m.getArgAsFloat(4);
 			float g = m.getArgAsFloat(5);
 			float b = m.getArgAsFloat(6);
+			if(canvasMirror) {
+				x = ofGetWidth() - x;
+			}
 			while (id >(int)lines.size() - 1) {
 				lines.push_back(ofMesh());
 				lines.back().setMode(OF_PRIMITIVE_LINE_STRIP);
@@ -301,12 +306,28 @@ void ofApp::update(){
 				vPrev = v;
 			}
 			lines.at(id).addVertex(v);
-			lines.at(id).addColor(ofFloatColor(r, g, b, ofMap(v.distance(vPrev), 0, 20, 1.0, 0.0, true)));
+			ofColor c = penColor;
+			c.a = ofMap(v.distance(vPrev), 0, 20, 1.0, 0.0, true);
+			lines.at(id).addColor(c);
 
 			stampPoints.at(0) = ofPoint(x, y);
 
-			fluid.addTemporalForce(v, (v - vPrev) * 0.125, ofFloatColor(r, g, b) * 0.25, 3);
+			fluid.addTemporalForce(v, (v - vPrev) * 0.125, penColor * 0.25, 3);
 
+		}
+		else if (m.getAddress() == "/sharedFace/canvas/remote/color") {
+			float r = m.getArgAsFloat(0);
+			float g = m.getArgAsFloat(1);
+			float b = m.getArgAsFloat(2);
+			penColor.r = r;
+			penColor.g = g;
+			penColor.b = b;
+		}
+		else if (m.getAddress() == "/sharedFace/canvas/remote/mirror") {
+			canvasMirror = m.getArgAsInt32(0);
+		}
+		else if (m.getAddress() == "/sharedFace/canvas/remote/clear") {
+			if(m.getArgAsInt32(0) == 1) fluid.clear();
 		}
 	}
 

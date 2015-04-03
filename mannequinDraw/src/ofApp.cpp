@@ -65,26 +65,32 @@ void ofApp::update(){
                 ofPoint tip = simpleHands[i].fingers[ fingerTypes[f] ].tip; // fingertip
                 fingersFound.push_back(id);
 
-				if( i == 0 && f >= 0 && f <= 2 ) {
+				if(f >= 1 && f <= 1 ) {
 //					if(tip.distance(simpleHands[i].handPos) > 100)
 					ofVec3f mp = mcp - pip;
 					ofVec3f td = tip - dip;
 					
 					int curIndex = polylines.size() / 3 - 1;
 					if(tip.z < -5) {
-						polylines.at(curIndex * 3 + f).addVertex(tip);
+						polylines.at(curIndex * 3 + simpleHands[i].isLeft).addVertex(tip);
 						ofxOscMessage m;
 						m.setAddress("/sharedFace/canvas/leap/index/coord");
-						m.addIntArg(curIndex * 3 + f);
+						m.addIntArg(curIndex * 3 + simpleHands[i].isLeft);
 						m.addFloatArg(ofMap(tip.x, -75, 75, 345, 680));
 						m.addFloatArg(ofMap(tip.y, 105, 295, 598, 124));
 						m.addFloatArg(tip.z);
-						m.addFloatArg(1.0f * (f == 0));
-						m.addFloatArg(1.0f * (f == 1));
-						m.addFloatArg(1.0f * (f == 2));
+						if(simpleHands[i].isLeft) {
+							m.addFloatArg(0.0f);
+							m.addFloatArg(0.0f);
+							m.addFloatArg(0.0f);
+						} else {
+							m.addFloatArg(1.0f);
+							m.addFloatArg(1.0f);
+							m.addFloatArg(1.0f);
+						}
 						sender.sendMessage(m);
 					} else {
-						if(polylines.at(curIndex * 3 + f).size() > 0) {
+						if(polylines.at(curIndex * 3 + simpleHands[i].isLeft).size() > 0) {
 							polylines.push_back(ofPolyline());
 							polylines.push_back(ofPolyline());
 							polylines.push_back(ofPolyline());
