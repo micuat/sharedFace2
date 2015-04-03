@@ -117,6 +117,20 @@ void ofApp::update() {
 			}
 		}
 		sender.sendMessage(m);
+		m.clear();
+		
+		m.setAddress("/osceleton/face");
+		m.addIntArg(0);
+		m.addIntArg(0);
+		
+		m.addFloatArg(-mat.getTranslation().x / 1000);
+		m.addFloatArg(-mat.getTranslation().y / 1000);
+		m.addFloatArg(mat.getTranslation().z / 1000);
+		ofVec3f euler = mat.getRotate().getEuler();
+		m.addFloatArg(euler.x);
+		m.addFloatArg(euler.y);
+		m.addFloatArg(-euler.z);
+		sender.sendMessage(m);
 	}
 }
 

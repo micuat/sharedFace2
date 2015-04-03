@@ -34,7 +34,7 @@ Naoto Hieda <micuat@gmail.com> 2014
 #ifdef USE_FACETRACKER
 #define NUM_POINTS 66
 #define FACE_ANIMATION_SIZE 0
-#define FACE_POSE_SIZE 0
+#define FACE_POSE_SIZE 6
 #endif
 
 class ofApp : public ofBaseApp {
