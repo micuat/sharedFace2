@@ -98,6 +98,9 @@ private:
 	
 	ofFloatColor penColor;
 	bool canvasMirror;
+	
+	const float fluidGravityConst = 2;
+	float fluidGravityCoeff;
 };
 
 #ifdef USE_MSSDK

@@ -189,7 +189,7 @@ void ofApp::init(){
 	fluid.allocate(ofGetWidth(), ofGetHeight(), 0.25);
 	fluid.dissipation = 1;
 	fluid.velocityDissipation = 0.95;
-	fluid.setGravity(ofVec2f(0.0, 0.05));
+	fluid.setGravity(ofVec2f(0, 0));
 //	fluid.begin();
 //	ofSetColor(255);
 //	ofCircle(438, 350, 20);
@@ -259,7 +259,6 @@ void ofApp::update(){
 #ifdef ENABLE_BOX2D
 			box2d.setGravity(ofVec2f(0, 0.5f).getRotated(-facePose.at(5)) - faceVel * 0.02f);
 #endif
-			fluid.setGravity(ofVec2f(0, 0.05).getRotated(-facePose.at(5)) - faceVel * 0.0002f);
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/pen/coord") {
 			int id = m.getArgAsInt32(0);
@@ -312,12 +311,18 @@ void ofApp::update(){
 
 			stampPoints.at(0) = ofPoint(x, y);
 
-			fluid.addTemporalForce(v, (v - vPrev) * 0.125, penColor * 0.25, 3);
+			ofVec2f gForce = ofVec2f(0, fluidGravityConst * fluidGravityCoeff).getRotated(-facePose.at(5));
+			fluid.addTemporalForce(v, (v - vPrev) * 0.125 + gForce, penColor * 0.25, 3);
 
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/nodejs/color/hue") {
 			float hue = m.getArgAsFloat(0);
 			penColor.setHsb(hue, 1.0, 1.0);
+		}
+		else if (m.getAddress() == "/sharedFace/canvas/nodejs/viscosity") {
+			float viscosity = m.getArgAsFloat(0);
+			fluidGravityCoeff = m.getArgAsFloat(1);
+			fluid.velocityDissipation = viscosity;
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/remote/color") {
 			float r = m.getArgAsFloat(0);
