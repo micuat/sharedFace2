@@ -315,6 +315,10 @@ void ofApp::update(){
 			fluid.addTemporalForce(v, (v - vPrev) * 0.125, penColor * 0.25, 3);
 
 		}
+		else if (m.getAddress() == "/sharedFace/canvas/nodejs/color/hue") {
+			float hue = m.getArgAsFloat(0);
+			penColor.setHsb(hue, 1.0, 1.0);
+		}
 		else if (m.getAddress() == "/sharedFace/canvas/remote/color") {
 			float r = m.getArgAsFloat(0);
 			float g = m.getArgAsFloat(1);
