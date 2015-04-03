@@ -77,7 +77,7 @@ void ofApp::update(){
 						m.setAddress("/sharedFace/canvas/leap/index/coord");
 						m.addIntArg(curIndex * 3 + simpleHands[i].isLeft);
 						m.addFloatArg(ofMap(tip.x, -75, 75, 345, 680));
-						m.addFloatArg(ofMap(tip.y, 105, 295, 598, 124));
+						m.addFloatArg(ofMap(tip.y, 115, 295, 598, 124));
 						m.addFloatArg(tip.z);
 						if(simpleHands[i].isLeft) {
 							m.addFloatArg(0.0f);
