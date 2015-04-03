@@ -4,6 +4,8 @@
 #include "ofxLeapMotion2.h"
 #include "ofxOsc.h"
 
+#define NO_WINDOW_APP
+
 #define PORT 57121
 
 class ofApp : public ofBaseApp{

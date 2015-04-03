@@ -21,9 +21,6 @@ void ofApp::setup(){
     
 	cam.setOrientation(ofPoint(-20, 0, 0));
     
-	glEnable(GL_DEPTH_TEST);
-    glEnable(GL_NORMALIZE);
-
 	mesh.load(ofToDataPath("mesh.ply"));
 	polylines.resize(3);
 
@@ -140,6 +137,13 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+#ifdef NO_WINDOW_APP
+	return;
+#endif
+	
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_NORMALIZE);
+	
     ofBackgroundGradient(ofColor(90, 90, 90), ofColor(30, 30, 30),  OF_GRADIENT_BAR);
 	
 	ofSetColor(200);

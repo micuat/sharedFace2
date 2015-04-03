@@ -136,11 +136,14 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-	
 	if(tracker.getFound())
 		ofBackground(0, 255, 0);
 	else
 		ofBackground(255, 0, 0);
+	
+#ifdef SKIP_DRAW
+	return;
+#endif
 	
 	ofSetColor(255, 255, 255);
 	
