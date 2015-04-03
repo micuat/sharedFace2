@@ -21,13 +21,13 @@ void ofApp::update(){
 	
 	appleRemoteKey currentKey = remote->getKey();
 	if( currentKey == appleRemoteKey_nil ) {
-		if( ofGetFrameNum() - lastCount > 120 ) {
+		if( ofGetFrameNum() - lastCount > 30 ) {
 			ofBackground(255, 255, 255);
 			lastCount = ofGetFrameNum();
 			lastKey = currentKey;
 		}
 	} else {
-		if( ofGetFrameNum() - lastCount < 10 ) {
+		if( ofGetFrameNum() - lastCount < 4 ) {
 			return;
 		}
 		bool twice = false;
@@ -69,13 +69,13 @@ void ofApp::update(){
 				break;
 			case appleRemoteKeyPlay:
 				m.setAddress("/sharedFace/canvas/remote/mirror");
-				if(twice) {
-					m.addIntArg(1);
-				} else {
-					m.addIntArg(0);
-				}
+				m.addIntArg(0);
 				break;
-			case appleRemoteKeyMenu:
+			case appleRemoteKeyPlay_Hold:
+				m.setAddress("/sharedFace/canvas/remote/mirror");
+				m.addIntArg(1);
+				break;
+			case appleRemoteKeyMenu_Hold:
 				m.setAddress("/sharedFace/canvas/remote/clear");
 				m.addIntArg(1);
 				break;
