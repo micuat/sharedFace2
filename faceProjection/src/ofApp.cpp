@@ -205,7 +205,7 @@ void ofApp::init(){
 	kalmanPosition.init(1e-2, 1e3, true);
 	predictedMatrix.makeIdentityMatrix();
 
-	renderMode = BOX2D_MODE;
+	renderMode = FLUID_MODE;
 }
 
 //--------------------------------------------------------------
@@ -312,12 +312,23 @@ void ofApp::update(){
 			stampPoints.at(0) = ofPoint(x, y);
 
 			ofVec2f gForce = ofVec2f(0, fluidGravityConst * fluidGravityCoeff).getRotated(-facePose.at(5));
-			fluid.addTemporalForce(v, (v - vPrev) * 0.125 + gForce, penColor * 0.25, 3);
+			float rad = 3;
+			float temp = 10;
+			if( penColor.r == 0 && penColor.g == 0 && penColor.b == 0 ) {
+				rad = 5;
+				temp = 50;
+			}
+			fluid.addTemporalForce(v, (v - vPrev) * 0.125 + gForce, penColor * 0.25, rad, temp);
 
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/nodejs/color/hue") {
 			float hue = m.getArgAsFloat(0);
 			penColor.setHsb(hue, 1.0, 1.0);
+		}
+		else if (m.getAddress() == "/sharedFace/canvas/nodejs/wipe") {
+			penColor.r = 0;
+			penColor.g = 0;
+			penColor.b = 0;
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/nodejs/viscosity") {
 			float viscosity = m.getArgAsFloat(0);
@@ -349,6 +360,8 @@ void ofApp::update(){
 	else if (renderMode == FLUID_MODE) {
 		fluid.update();
 	}
+	ofSetWindowTitle(ofToString(ofGetFrameRate()));
+
 	return;
 	ofVec3f cC(-facePose.at(0), facePose.at(1), facePose.at(2));
 
