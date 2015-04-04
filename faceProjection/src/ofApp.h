@@ -37,6 +37,8 @@ Naoto Hieda <micuat@gmail.com> 2014
 #define FACE_POSE_SIZE 6
 #endif
 
+#define IMAGE_LOG
+
 class ofApp : public ofBaseApp {
 public:
 	void setup();
@@ -102,6 +104,8 @@ private:
 	const float fluidGravityConst = 2;
 	float fluidGravityCoeff;
 	int lastCursorCount;
+	
+	float lastSaved;
 };
 
 #ifdef USE_MSSDK

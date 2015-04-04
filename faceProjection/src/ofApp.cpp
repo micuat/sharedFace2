@@ -32,7 +32,7 @@ void ofApp::init(){
 
 	receiver.setup(PORT);
 
-	cameraMode = EASYCAM_MODE;
+	cameraMode = PRO_MODE;
 
 	// load calibration parameters
 	cv::FileStorage fs(ofToDataPath(rootDir[0] + "/config.yml"), cv::FileStorage::READ);
@@ -159,6 +159,7 @@ void ofApp::init(){
 		vec2 pos = gl_TexCoord[0].st;
 
 		vec4 col = texture2DRect(texture1, gl_TexCoord[0].st);
+		col.a = col.a * 0.5;
 		gl_FragColor = col;
 	}
 	);
@@ -208,6 +209,10 @@ void ofApp::init(){
 	renderMode = FLUID_MODE;
 	
 	lastCursorCount = 0;
+	
+	penColor = ofFloatColor::red;
+	
+	lastSaved = 0;
 }
 
 //--------------------------------------------------------------
@@ -318,12 +323,12 @@ void ofApp::update(){
 
 				ofVec2f gForce = ofVec2f(0, fluidGravityConst * fluidGravityCoeff).getRotated(-facePose.at(5));
 				float rad = 3;
-				float temp = 10;
+				float temp = 5;
 				if( penColor.r == 0 && penColor.g == 0 && penColor.b == 0 ) {
 					rad = 5;
-					temp = 50;
+					temp = 20;
 				}
-				fluid.addTemporalForce(v, (v - vPrev) * 0.125 + gForce, penColor * 0.25, rad, temp);
+				fluid.addTemporalForce(v, (v - vPrev) * 0.125 + gForce, penColor * 0.05, rad, temp);
 			}
 		}
 		else if (m.getAddress() == "/sharedFace/canvas/nodejs/color/hue") {
@@ -367,7 +372,18 @@ void ofApp::update(){
 	}
 	ofSetWindowTitle(ofToString(ofGetFrameRate()));
 
+#ifdef IMAGE_LOG
+	ofPixels pix;
+	fluid.getBackBuffer()->readToPixels(pix);
+	if(ofGetElapsedTimef() - lastSaved > 30) {
+		ofSaveImage(pix, ofToDataPath(ofGetTimestampString() + ".png"));
+		lastSaved = ofGetElapsedTimef();
+	}
+#endif
+
 	return;
+
+	
 	ofVec3f cC(-facePose.at(0), facePose.at(1), facePose.at(2));
 
 	// latency compensation

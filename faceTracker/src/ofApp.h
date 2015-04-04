@@ -7,6 +7,7 @@
 #include "ofxOsc.h"
 
 #define SKIP_DRAW
+#define IMAGE_LOG
 
 #define PORT 57121
 
@@ -42,4 +43,6 @@ public:
 	ofxCv::KalmanEuler kalmanEuler;
 	
 	ofxOscSender sender;
+	
+	float lastSaved;
 };

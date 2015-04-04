@@ -19,6 +19,8 @@ void ofApp::setup() {
 	kalmanEuler.init(30000.0, 30000.0);
 	
 	sender.setup("localhost", PORT);
+	
+	lastSaved = 0;
 }
 
 //--------------------------------------------------------------
@@ -28,7 +30,19 @@ void ofApp::update() {
 	if(kinect.isFrameNew()) {
 		using namespace cv;
 		using namespace ofxCv;
+		
+#ifdef IMAGE_LOG
+		if(ofGetElapsedTimef() - lastSaved > 30) {
+			ofSaveImage(kinect.getPixelsRef(), ofToDataPath(ofGetTimestampString() + ".png"));
+			lastSaved = ofGetElapsedTimef();
+		}
+#endif
 		colorImg = toCv(kinect.getPixelsRef());
+		cvtColor(colorImg, colorImg, CV_RGB2YCrCb);
+		vector<Mat> planes;
+		split(colorImg, planes);
+		colorImg = planes.at(0);
+		
 		tracker.update(colorImg);
 		
 		if(!tracker.getFound()) return;
@@ -132,6 +146,8 @@ void ofApp::update() {
 		m.addFloatArg(-euler.z);
 		sender.sendMessage(m);
 	}
+	
+	ofSetWindowTitle(ofToString(ofGetFrameRate()));
 }
 
 //--------------------------------------------------------------
@@ -152,7 +168,8 @@ void ofApp::draw() {
 		drawPointCloud();
 		easyCam.end();
 	} else {
-		ofxCv::drawMat(depthImg, 0, 0);
+		//ofxCv::drawMat(depthImg, 0, 0);
+		ofxCv::drawMat(colorImg, 0, 0);
 		ofSetColor(255, 255);
 		tracker.getImageMesh().drawWireframe();
 	}
